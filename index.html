@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KOMAL & HAOYUAN</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Noto+Sans+Devanagari:wght@400;600&family=ZCOOL+XiaoWei&display=swap" rel="stylesheet">
+
+<!-- Firebase -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, deleteDoc, doc }
+    from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+// ── 🔧 在这里填入你的 Firebase 配置 ──────────────────────────
+const firebaseConfig = {
+  apiKey: "AIzaSyDIeaAVvLD9d4L9QAvbTLCZ6N0x0-U1Nwg",
+  authDomain: "friendship-k-h.firebaseapp.com",
+  projectId: "friendship-k-h",
+  storageBucket: "friendship-k-h.firebasestorage.app",
+  messagingSenderId: "791706318386",
+  appId: "1:791706318386:web:5d69e67fb55716ba8e2e2b"
+};
+// ─────────────────────────────────────────────────────────────
+
+const app = initializeApp(firebaseConfig);
+const db  = getFirestore(app);
+window.fb = { db, collection, addDoc, query, orderBy, onSnapshot, deleteDoc, doc };
+</script>
+
+<style>
+/* ═══════════════════════════════════════════════════════════
+   VARIABLES & RESET
+═══════════════════════════════════════════════════════════ */
+:root {
+    --gold:      #D4A017;
+    --gold-lt:   #F5C842;
+    --gold-dk:   #8B6914;
+    --crimson:   #8B0000;
+    --crimson-lt:#C0392B;
+    --ivory:     #FDF6E3;
+    --ink:       #1A0A00;
+    --bg-deep:   #0D0500;
+    --card-bg:   rgba(20, 8, 0, 0.82);
+    --border-gold: 2px solid var(--gold);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+    font-family: 'Playfair Display', 'ZCOOL XiaoWei', serif;
+    background: var(--bg-deep);
+    color: var(--ivory);
+    min-height: 100vh;
+    overflow-x: hidden;
+}
+
+/* ── EPIC BACKGROUND ────────────────────────────────────── */
+.bg-layer {
+    position: fixed; inset: 0; z-index: 0;
+    background:
+        radial-gradient(ellipse 80% 60% at 50% 0%, rgba(180,100,0,0.28) 0%, transparent 70%),
+        radial-gradient(ellipse 60% 80% at 0% 100%, rgba(139,0,0,0.22) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 80% at 100% 100%, rgba(120,60,0,0.22) 0%, transparent 60%),
+        linear-gradient(180deg, #0D0500 0%, #1a0800 40%, #0D0500 100%);
+}
+
+/* SVG noise grain overlay */
+.grain {
+    position: fixed; inset: 0; z-index: 1; pointer-events: none; opacity: 0.045;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-size: 200px 200px;
+}
+
+/* Decorative diagonal lines */
+.bg-lines {
+    position: fixed; inset: 0; z-index: 1; pointer-events: none; opacity: 0.06;
+    background-image: repeating-linear-gradient(
+        45deg, var(--gold) 0px, var(--gold) 1px, transparent 1px, transparent 40px
+    );
+}
+
+/* ── ORNAMENT CORNERS ───────────────────────────────────── */
+.corner {
+    position: fixed; width: 120px; height: 120px; z-index: 2; pointer-events: none;
+}
+.corner svg { width: 100%; height: 100%; fill: none; stroke: var(--gold); stroke-width: 1.5; opacity: 0.55; }
+.corner-tl { top: 0; left: 0; }
+.corner-tr { top: 0; right: 0; transform: scaleX(-1); }
+.corner-bl { bottom: 0; left: 0; transform: scaleY(-1); }
+.corner-br { bottom: 0; right: 0; transform: scale(-1,-1); }
+
+/* ── WRAPPER ────────────────────────────────────────────── */
+.wrapper { position: relative; z-index: 10; display: flex; flex-direction: column; align-items: center; }
+
+/* ── HEADER ─────────────────────────────────────────────── */
+.site-header {
+    width: 100%; text-align: center; padding: 50px 20px 30px;
+    position: relative;
+}
+
+.header-ornament {
+    font-size: 1rem; letter-spacing: 0.4em; color: var(--gold-lt);
+    text-transform: uppercase; margin-bottom: 12px; opacity: 0.8;
+}
+
+.site-title {
+    font-family: 'Cinzel Decorative', serif;
+    font-size: clamp(2rem, 6vw, 4.5rem);
+    font-weight: 900;
+    line-height: 1.1;
+    background: linear-gradient(135deg, var(--gold-lt) 0%, var(--gold) 40%, #fff8e0 60%, var(--gold) 80%, var(--gold-dk) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-shadow: none;
+    letter-spacing: 0.05em;
+    animation: shimmer 4s ease-in-out infinite alternate;
+}
+
+@keyframes shimmer {
+    from { filter: brightness(1); }
+    to   { filter: brightness(1.2); }
+}
+
+.title-divider {
+    display: flex; align-items: center; justify-content: center;
+    gap: 16px; margin: 16px 0 20px;
+}
+.title-divider span {
+    height: 1px; background: linear-gradient(90deg, transparent, var(--gold), transparent);
+    flex: 1; max-width: 160px;
+}
+.title-divider .lotus { font-size: 1.5rem; animation: spinSlow 8s linear infinite; }
+@keyframes spinSlow { to { transform: rotate(360deg); } }
+
+/* ── COUNTER ────────────────────────────────────────────── */
+.counter-card {
+    display: inline-flex; align-items: center; gap: 20px;
+    border: 1px solid var(--gold-dk);
+    background: linear-gradient(135deg, rgba(30,10,0,0.9), rgba(80,30,0,0.5));
+    padding: 20px 40px; border-radius: 4px;
+    box-shadow: 0 0 40px rgba(212,160,23,0.15), inset 0 0 30px rgba(0,0,0,0.5);
+    position: relative; overflow: hidden;
+    margin-bottom: 10px;
+}
+.counter-card::before {
+    content: ''; position: absolute; inset: 0;
+    background: linear-gradient(45deg, transparent 40%, rgba(212,160,23,0.05) 50%, transparent 60%);
+    animation: scanline 3s ease-in-out infinite;
+}
+@keyframes scanline { 0%,100%{ opacity:0 } 50%{ opacity:1 } }
+
+.counter-num {
+    font-family: 'Cinzel Decorative', serif;
+    font-size: clamp(3rem, 8vw, 6rem);
+    color: var(--gold-lt);
+    line-height: 1;
+    text-shadow: 0 0 30px rgba(212,160,23,0.6);
+}
+.counter-label { text-align: left; }
+.counter-label .c-top {
+    font-size: 0.75rem; letter-spacing: 0.3em; color: var(--gold);
+    text-transform: uppercase; opacity: 0.75;
+}
+.counter-label .c-main {
+    font-size: 1.2rem; color: var(--ivory);
+}
+.counter-label .c-sub {
+    font-size: 0.75rem; color: var(--gold-dk); opacity: 0.7;
+}
+
+/* ── NAV BAR ────────────────────────────────────────────── */
+.nav-bar {
+    width: 100%; display: flex; justify-content: center; align-items: center;
+    gap: 12px; padding: 12px 20px;
+    border-top: 1px solid rgba(212,160,23,0.2);
+    border-bottom: 1px solid rgba(212,160,23,0.2);
+    background: rgba(13,5,0,0.7);
+    position: sticky; top: 0; z-index: 100;
+    backdrop-filter: blur(12px);
+    flex-wrap: wrap;
+}
+.lang-btn {
+    background: transparent; border: 1px solid var(--gold-dk);
+    color: var(--gold); padding: 6px 18px; border-radius: 2px;
+    font-family: 'Playfair Display', serif; font-size: 0.85rem;
+    cursor: pointer; letter-spacing: 0.1em; transition: 0.25s;
+}
+.lang-btn:hover { border-color: var(--gold-lt); color: var(--gold-lt); }
+.lang-btn.active {
+    background: linear-gradient(135deg, var(--gold-dk), var(--gold));
+    color: var(--ink); border-color: var(--gold-lt);
+    box-shadow: 0 0 12px rgba(212,160,23,0.35);
+}
+
+.nav-loc {
+    font-size: 0.78rem; color: var(--gold-dk); letter-spacing: 0.08em;
+    padding: 5px 12px; border: 1px solid rgba(212,160,23,0.2); border-radius: 2px;
+}
+
+/* ── MAIN CONTENT ───────────────────────────────────────── */
+.content { width: 92%; max-width: 980px; padding: 40px 0 80px; }
+
+/* ── UPLOAD CARD ────────────────────────────────────────── */
+.upload-card {
+    border: 1px solid var(--gold-dk);
+    background: linear-gradient(160deg, rgba(25,8,0,0.95), rgba(15,5,0,0.95));
+    border-radius: 4px; padding: 32px;
+    box-shadow: 0 8px 60px rgba(0,0,0,0.6), 0 0 0 1px rgba(212,160,23,0.08);
+    margin-bottom: 50px; position: relative;
+}
+
+.upload-card::before {
+    content: '';
+    position: absolute; top: 8px; left: 8px; right: 8px; bottom: 8px;
+    border: 1px solid rgba(212,160,23,0.12); border-radius: 2px;
+    pointer-events: none;
+}
+
+.section-heading {
+    font-family: 'Cinzel Decorative', serif;
+    font-size: 0.85rem; letter-spacing: 0.35em; color: var(--gold);
+    text-transform: uppercase; margin-bottom: 20px;
+    display: flex; align-items: center; gap: 12px;
+}
+.section-heading::after {
+    content: ''; flex: 1; height: 1px;
+    background: linear-gradient(90deg, var(--gold-dk), transparent);
+}
+
+.thought-input {
+    width: 100%; background: rgba(0,0,0,0.4);
+    border: 1px solid var(--gold-dk); border-radius: 2px;
+    color: var(--ivory); font-family: 'Playfair Display', serif; font-size: 1rem;
+    padding: 14px 16px; resize: vertical; min-height: 90px;
+    transition: border-color 0.25s;
+    outline: none;
+}
+.thought-input:focus { border-color: var(--gold); box-shadow: 0 0 0 1px rgba(212,160,23,0.2); }
+.thought-input::placeholder { color: rgba(253,246,227,0.3); font-style: italic; }
+
+/* MOOD GRID */
+.mood-section { margin: 20px 0; }
+.mood-heading {
+    font-size: 0.72rem; letter-spacing: 0.25em; color: var(--gold-dk);
+    text-transform: uppercase; margin-bottom: 12px;
+}
+.mood-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+.mood-chip {
+    background: rgba(0,0,0,0.35); border: 1px solid rgba(212,160,23,0.3);
+    color: var(--ivory); padding: 5px 14px; border-radius: 100px;
+    font-family: 'Playfair Display', serif; font-size: 0.82rem;
+    cursor: pointer; transition: 0.2s; white-space: nowrap;
+    display: flex; align-items: center; gap: 5px;
+}
+.mood-chip:hover { border-color: var(--gold); color: var(--gold-lt); }
+.mood-chip.sel {
+    background: linear-gradient(135deg, var(--gold-dk), var(--gold));
+    border-color: var(--gold-lt); color: var(--ink);
+    box-shadow: 0 0 12px rgba(212,160,23,0.3);
+}
+
+/* PHOTO + SEND ROW */
+.action-row { display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: 16px; margin-top: 20px; }
+.photo-zone { display: flex; flex-direction: column; gap: 6px; }
+.photo-label {
+    display: inline-flex; align-items: center; gap: 8px;
+    border: 1px solid var(--gold-dk); color: var(--gold);
+    padding: 8px 20px; border-radius: 2px; cursor: pointer;
+    font-size: 0.85rem; letter-spacing: 0.1em;
+    transition: 0.2s; font-family: 'Playfair Display', serif;
+}
+.photo-label:hover { border-color: var(--gold-lt); color: var(--gold-lt); background: rgba(212,160,23,0.06); }
+#imageInput { display: none; }
+.photo-meta { font-size: 0.75rem; color: var(--gold-dk); }
+.compress-note { font-size: 0.72rem; color: #a0c0a0; }
+
+.btn-submit {
+    font-family: 'Cinzel Decorative', serif;
+    font-size: 0.85rem; letter-spacing: 0.2em;
+    background: linear-gradient(135deg, var(--crimson), #5a0000, var(--crimson-lt));
+    border: 1px solid var(--gold);
+    color: var(--gold-lt); padding: 12px 32px; border-radius: 2px;
+    cursor: pointer; text-transform: uppercase;
+    box-shadow: 0 0 20px rgba(139,0,0,0.4);
+    transition: 0.25s; position: relative; overflow: hidden;
+}
+.btn-submit::before {
+    content: ''; position: absolute; inset: 0;
+    background: linear-gradient(90deg, transparent 30%, rgba(255,220,100,0.12) 50%, transparent 70%);
+    transform: translateX(-100%); transition: transform 0.5s;
+}
+.btn-submit:hover::before { transform: translateX(100%); }
+.btn-submit:hover { box-shadow: 0 0 30px rgba(212,160,23,0.3); letter-spacing: 0.25em; }
+.btn-submit:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.sending-bar {
+    display: none; margin-top: 14px; text-align: center;
+    font-size: 0.8rem; color: var(--gold); letter-spacing: 0.2em; opacity: 0.7;
+}
+
+/* ── WALL ───────────────────────────────────────────────── */
+.wall-heading {
+    font-family: 'Cinzel Decorative', serif;
+    font-size: clamp(1.1rem, 3vw, 1.6rem);
+    color: var(--gold); text-align: center;
+    letter-spacing: 0.25em; margin-bottom: 30px;
+    text-shadow: 0 0 20px rgba(212,160,23,0.3);
+}
+
+.photo-wall { columns: 2 280px; gap: 24px; }
+
+.mem-card {
+    break-inside: avoid; background: var(--card-bg);
+    border: 1px solid rgba(212,160,23,0.25); border-radius: 3px;
+    margin-bottom: 24px; overflow: hidden; position: relative;
+    transition: transform 0.3s, box-shadow 0.3s;
+    animation: fadeUp 0.5s ease both;
+}
+@keyframes fadeUp { from { opacity:0; transform:translateY(20px) } to { opacity:1; transform:translateY(0) } }
+.mem-card:hover { transform: translateY(-4px); box-shadow: 0 12px 40px rgba(0,0,0,0.5), 0 0 0 1px rgba(212,160,23,0.35); }
+
+.mem-img { width: 100%; display: block; max-height: 340px; object-fit: cover; }
+
+.mem-body { padding: 16px 18px; }
+
+.mem-mood { font-size: 1.3rem; margin-bottom: 8px; }
+
+.mem-text {
+    font-family: 'Playfair Display', serif;
+    font-size: 0.92rem; line-height: 1.65;
+    color: rgba(253,246,227,0.88); white-space: pre-wrap;
+}
+.mem-translation {
+    font-size: 0.78rem; color: var(--gold-dk); font-style: italic;
+    margin-top: 8px; line-height: 1.5;
+    border-left: 2px solid var(--gold-dk); padding-left: 8px;
+}
+
+.mem-footer {
+    display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 6px; margin-top: 14px;
+    padding-top: 12px; border-top: 1px solid rgba(212,160,23,0.12);
+    font-size: 0.72rem; color: rgba(212,160,23,0.5); letter-spacing: 0.05em;
+}
+.mem-loc { color: rgba(212,160,23,0.45); }
+
+.del-btn {
+    position: absolute; top: 8px; right: 8px;
+    background: rgba(139,0,0,0.85); color: var(--gold-lt);
+    border: 1px solid var(--gold-dk); border-radius: 2px;
+    width: 26px; height: 26px; cursor: pointer;
+    font-size: 0.9rem; line-height: 24px; text-align: center;
+    opacity: 0; transition: opacity 0.2s;
+}
+.mem-card:hover .del-btn { opacity: 1; }
+
+/* ── FOOTER ─────────────────────────────────────────────── */
+.site-footer {
+    text-align: center; padding: 24px;
+    font-size: 0.72rem; letter-spacing: 0.2em;
+    color: rgba(212,160,23,0.3); text-transform: uppercase;
+    border-top: 1px solid rgba(212,160,23,0.1);
+    width: 100%;
+}
+
+@media (max-width: 600px) {
+    .counter-card { padding: 16px 22px; gap: 14px; }
+    .upload-card { padding: 20px 16px; }
+    .photo-wall { columns: 1; }
+}
+</style>
+</head>
+
+<body>
+<div class="bg-layer"></div>
+<div class="grain"></div>
+<div class="bg-lines"></div>
+
+<!-- Decorative corners -->
+<div class="corner corner-tl"><svg viewBox="0 0 120 120"><path d="M10,10 L10,50 M10,10 L50,10 M10,10 Q10,60 60,110"/><path d="M20,20 L20,45 M20,20 L45,20"/><circle cx="10" cy="10" r="3" fill="var(--gold)" stroke="none" opacity="0.5"/></svg></div>
+<div class="corner corner-tr"><svg viewBox="0 0 120 120"><path d="M10,10 L10,50 M10,10 L50,10 M10,10 Q10,60 60,110"/><path d="M20,20 L20,45 M20,20 L45,20"/><circle cx="10" cy="10" r="3" fill="var(--gold)" stroke="none" opacity="0.5"/></svg></div>
+<div class="corner corner-bl"><svg viewBox="0 0 120 120"><path d="M10,10 L10,50 M10,10 L50,10 M10,10 Q10,60 60,110"/><path d="M20,20 L20,45 M20,20 L45,20"/><circle cx="10" cy="10" r="3" fill="var(--gold)" stroke="none" opacity="0.5"/></svg></div>
+<div class="corner corner-br"><svg viewBox="0 0 120 120"><path d="M10,10 L10,50 M10,10 L50,10 M10,10 Q10,60 60,110"/><path d="M20,20 L20,45 M20,20 L45,20"/><circle cx="10" cy="10" r="3" fill="var(--gold)" stroke="none" opacity="0.5"/></svg></div>
+
+<div class="wrapper">
+
+<!-- HEADER -->
+<header class="site-header">
+    <div class="header-ornament">✦ &nbsp; एक कहानी &nbsp; · &nbsp; A Story &nbsp; · &nbsp; 一段故事 &nbsp; ✦</div>
+    <h1 class="site-title">KOMAL & HAOYUAN</h1>
+    <div class="title-divider">
+        <span></span><span class="lotus">🪷</span><span></span>
+    </div>
+    <div class="counter-card">
+        <div class="counter-num" id="daysNum">0</div>
+        <div class="counter-label">
+            <div class="c-top" data-i18n="cTop">Days of friendship</div>
+            <div class="c-main" data-i18n="cMain">相识的日子</div>
+            <div class="c-sub">Since 2024 · 12 · 07</div>
+        </div>
+    </div>
+</header>
+
+<!-- NAV -->
+<nav class="nav-bar">
+    <button class="lang-btn" onclick="setLang('zh')" id="btn-zh">中文</button>
+    <button class="lang-btn" onclick="setLang('en')" id="btn-en">English</button>
+    <button class="lang-btn" onclick="setLang('hi')" id="btn-hi">हिन्दी</button>
+    <span class="nav-loc" id="navLoc">📍 —</span>
+</nav>
+
+<div class="content">
+
+    <!-- UPLOAD -->
+    <div class="upload-card">
+        <div class="section-heading" data-i18n="newMem">New Memory</div>
+
+        <textarea class="thought-input" id="thoughtInput"
+            data-i18n-ph="placeholder"></textarea>
+
+        <!-- MOOD -->
+        <div class="mood-section">
+            <div class="mood-heading" data-i18n="moodLabel">Mood</div>
+            <div class="mood-grid" id="moodGrid"></div>
+        </div>
+
+        <div class="action-row">
+            <div class="photo-zone">
+                <label class="photo-label" for="imageInput">
+                    📷 <span data-i18n="choosePhoto">Choose Photo</span>
+                </label>
+                <input type="file" id="imageInput" accept="image/*" onchange="onFile()">
+                <div class="photo-meta" id="photoMeta"></div>
+                <div class="compress-note" id="compressNote"></div>
+            </div>
+            <button class="btn-submit" id="sendBtn" onclick="doSend()">
+                <span data-i18n="btnSend">Preserve This Moment</span>
+            </button>
+        </div>
+        <div class="sending-bar" id="sendingBar" data-i18n="sending">✦ Sending into the archives…</div>
+    </div>
+
+    <!-- WALL -->
+    <div class="wall-heading" data-i18n="wallTitle">✦ Our Story Wall ✦</div>
+    <div class="photo-wall" id="photoWall"></div>
+
+</div>
+
+<footer class="site-footer">
+    <span data-i18n="footer">KOMAL & HAOYUAN · A friendship written in light</span>
+</footer>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+//  CONFIG
+// ═══════════════════════════════════════════════════════════
+const START = new Date("2024-12-07");
+
+const MOODS = [
+    { e:"🌟", zh:"闪耀",   en:"Radiant",   hi:"चमकदार"  },
+    { e:"😊", zh:"开心",   en:"Happy",     hi:"खुश"      },
+    { e:"😂", zh:"大笑",   en:"LOL",       hi:"हँसी"     },
+    { e:"🥰", zh:"心动",   en:"Adore",     hi:"प्रिय"    },
+    { e:"🎉", zh:"庆祝",   en:"Celebrate", hi:"जश्न"     },
+    { e:"🌸", zh:"平静",   en:"Peaceful",  hi:"शांत"     },
+    { e:"🤩", zh:"惊喜",   en:"Amazed",    hi:"अद्भुत"   },
+    { e:"😌", zh:"满足",   en:"Content",   hi:"संतुष्ट"  },
+    { e:"🌈", zh:"美好",   en:"Blissful",  hi:"आनंद"     },
+    { e:"😢", zh:"想念",   en:"Missing",   hi:"याद"      },
+    { e:"😔", zh:"难过",   en:"Sad",       hi:"उदास"     },
+    { e:"😭", zh:"悲伤",   en:"Tears",     hi:"रोना"     },
+    { e:"🤗", zh:"温暖",   en:"Warm",      hi:"गर्म"     },
+    { e:"😴", zh:"困",     en:"Sleepy",    hi:"नींद"     },
+    { e:"🌙", zh:"深夜",   en:"Late Night",hi:"रात"      },
+    { e:"🥺", zh:"委屈",   en:"Pouty",     hi:"मासूम"    },
+    { e:"🎵", zh:"音乐",   en:"Musical",   hi:"संगीत"    },
+    { e:"✨", zh:"难忘",   en:"Unforgettable",hi:"यादगार"},
+];
+
+const I18N = {
+    zh: {
+        cTop:"相识的日子", cMain:"天了", newMem:"记录回忆",
+        moodLabel:"此刻心情", placeholder:"写下当时的感受…",
+        choosePhoto:"选择照片", btnSend:"封存这一刻",
+        sending:"✦ 正在写入史册…",
+        wallTitle:"✦ 我们的故事墙 ✦",
+        footer:"KOMAL & HAOYUAN · 用光写下的友谊",
+        transTag:"🪷 译：", confirmDel:"确定删除这条记忆吗？",
+        locFail:"📍 位置未知", compressing:"正在压缩…", compressed:"已压缩",
+    },
+    en: {
+        cTop:"Days of friendship", cMain:"days", newMem:"New Memory",
+        moodLabel:"Mood", placeholder:"Write what you felt in this moment…",
+        choosePhoto:"Choose Photo", btnSend:"Preserve This Moment",
+        sending:"✦ Sending into the archives…",
+        wallTitle:"✦ Our Story Wall ✦",
+        footer:"KOMAL & HAOYUAN · A friendship written in light",
+        transTag:"🪷 Translated: ", confirmDel:"Delete this memory?",
+        locFail:"📍 Unknown", compressing:"Compressing…", compressed:"Compressed",
+    },
+    hi: {
+        cTop:"दोस्ती के दिन", cMain:"दिन", newMem:"यादें दर्ज करें",
+        moodLabel:"आपका मूड", placeholder:"उस पल की भावना लिखें…",
+        choosePhoto:"फ़ोटो चुनें", btnSend:"इस पल को संजोएं",
+        sending:"✦ अभिलेखागार में भेजा जा रहा है…",
+        wallTitle:"✦ हमारी कहानी की दीवार ✦",
+        footer:"KOMAL & HAOYUAN · रोशनी में लिखी दोस्ती",
+        transTag:"🪷 अनुवाद: ", confirmDel:"क्या आप इस याद को मिटाना चाहते हैं?",
+        locFail:"📍 अज्ञात", compressing:"संपीड़ित हो रहा है…", compressed:"संपीड़ित",
+    }
+};
+const LANG_CODES = { zh:"zh-CN", en:"en", hi:"hi" };
+
+const browserL = navigator.language || 'en';
+let lang = browserL.startsWith('zh') ? 'zh' : browserL.startsWith('hi') ? 'hi' : 'en';
+let mood = null;
+let pendingImg = null;
+let userLoc = "";
+
+// ── TIMER ──────────────────────────────────────────────────
+function tick() {
+    const days = Math.max(0, Math.floor((Date.now() - START) / 86400000));
+    document.getElementById('daysNum').textContent = days.toLocaleString();
+}
+tick();
+setInterval(tick, 60000);
+
+// ── LANG ───────────────────────────────────────────────────
+function setLang(l) {
+    lang = l;
+    document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('btn-' + l).classList.add('active');
+    const t = I18N[l];
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+        const k = el.getAttribute('data-i18n');
+        if (t[k] !== undefined) el.textContent = t[k];
+    });
+    document.querySelectorAll('[data-i18n-ph]').forEach(el => {
+        const k = el.getAttribute('data-i18n-ph');
+        if (t[k]) el.placeholder = t[k];
+    });
+    buildMoodGrid();
+    // re-translate cards
+    document.querySelectorAll('.mem-translation[data-orig]').forEach(async el => {
+        const orig = el.getAttribute('data-orig');
+        const ol = el.getAttribute('data-orig-lang') || 'en';
+        if (orig && ol !== lang) {
+            const tx = await translate(orig, ol, lang);
+            el.textContent = tx ? t.transTag + tx : '';
+        } else {
+            el.textContent = '';
+        }
+    });
+}
+
+// ── MOODS ──────────────────────────────────────────────────
+function buildMoodGrid() {
+    const grid = document.getElementById('moodGrid');
+    const prev = mood;
+    grid.innerHTML = '';
+    MOODS.forEach(m => {
+        const c = document.createElement('button');
+        c.className = 'mood-chip' + (m.e === prev ? ' sel' : '');
+        c.setAttribute('data-mood', m.e);
+        c.onclick = () => pickMood(c);
+        c.innerHTML = `${m.e} <span>${m[lang] || m.en}</span>`;
+        grid.appendChild(c);
+    });
+}
+function pickMood(btn) {
+    document.querySelectorAll('.mood-chip').forEach(b => b.classList.remove('sel'));
+    btn.classList.add('sel');
+    mood = btn.getAttribute('data-mood');
+}
+
+// ── LOCATION ───────────────────────────────────────────────
+async function getLocation() {
+    const el = document.getElementById('navLoc');
+    try {
+        const pos = await new Promise((res, rej) =>
+            navigator.geolocation.getCurrentPosition(res, rej, { timeout: 7000 }));
+        const { latitude: la, longitude: lo } = pos.coords;
+        const r = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${la}&lon=${lo}&format=json`);
+        const d = await r.json();
+        const city = d.address.city || d.address.town || d.address.village || d.address.county || '';
+        const cc = d.address.country_code ? d.address.country_code.toUpperCase() : '';
+        userLoc = [city, cc].filter(Boolean).join(', ');
+        el.textContent = '📍 ' + userLoc;
+    } catch {
+        userLoc = '';
+        el.textContent = I18N[lang].locFail;
+    }
+}
+
+// ── IMAGE COMPRESS ─────────────────────────────────────────
+async function compress(file, maxKB = 900) {
+    return new Promise(resolve => {
+        const reader = new FileReader();
+        reader.onload = e => {
+            const img = new Image();
+            img.onload = () => {
+                const MAX = 1800;
+                let { width: w, height: h } = img;
+                if (w > MAX || h > MAX) {
+                    const r = Math.min(MAX/w, MAX/h);
+                    w = Math.round(w * r); h = Math.round(h * r);
+                }
+                const cv = document.createElement('canvas');
+                cv.width = w; cv.height = h;
+                cv.getContext('2d').drawImage(img, 0, 0, w, h);
+                let lo = 0.1, hi = 0.93, q = 0.8, result = '';
+                for (let i = 0; i < 9; i++) {
+                    const mid = (lo + hi) / 2;
+                    result = cv.toDataURL('image/jpeg', mid);
+                    const kb = result.length * 3 / 4 / 1024;
+                    if (kb > maxKB) hi = mid; else { lo = mid; q = mid; }
+                }
+                resolve(cv.toDataURL('image/jpeg', q));
+            };
+            img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+    });
+}
+
+async function onFile() {
+    const file = document.getElementById('imageInput').files[0];
+    const meta = document.getElementById('photoMeta');
+    const note = document.getElementById('compressNote');
+    if (!file) { meta.textContent = ''; note.textContent = ''; pendingImg = null; return; }
+    const origKB = Math.round(file.size / 1024);
+    meta.textContent = `📎 ${file.name} · ${origKB} KB`;
+    if (file.size > 900 * 1024) {
+        note.textContent = I18N[lang].compressing;
+        pendingImg = await compress(file, 900);
+        const newKB = Math.round(pendingImg.length * 3 / 4 / 1024);
+        note.textContent = `✅ ${I18N[lang].compressed}: ${origKB}KB → ${newKB}KB`;
+    } else {
+        note.textContent = '';
+        pendingImg = await new Promise(r => {
+            const fr = new FileReader();
+            fr.onloadend = () => r(fr.result);
+            fr.readAsDataURL(file);
+        });
+    }
+}
+
+// ── TRANSLATE ──────────────────────────────────────────────
+async function translate(text, from, to) {
+    if (!text || from === to) return null;
+    try {
+        const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text.slice(0,450))}&langpair=${LANG_CODES[from]||from}|${LANG_CODES[to]||to}`;
+        const d = await (await fetch(url)).json();
+        if (d.responseStatus === 200) return d.responseData.translatedText;
+    } catch {}
+    return null;
+}
+
+// ── SEND ───────────────────────────────────────────────────
+async function doSend() {
+    const text = document.getElementById('thoughtInput').value.trim();
+    if (!text && !pendingImg) return;
+    if (!window.fb) { alert('Firebase not connected — fill in firebaseConfig first!'); return; }
+    const btn = document.getElementById('sendBtn');
+    const bar = document.getElementById('sendingBar');
+    btn.disabled = true; bar.style.display = 'block';
+    try {
+        await window.fb.addDoc(window.fb.collection(window.fb.db, "memories"), {
+            text, image: pendingImg || null, mood: mood || "",
+            lang, location: userLoc,
+            timestamp: Date.now(),
+            displayTime: new Date().toLocaleString()
+        });
+        document.getElementById('thoughtInput').value = '';
+        document.getElementById('imageInput').value = '';
+        document.getElementById('photoMeta').textContent = '';
+        document.getElementById('compressNote').textContent = '';
+        pendingImg = null; mood = null;
+        document.querySelectorAll('.mood-chip').forEach(b => b.classList.remove('sel'));
+    } catch(e) {
+        console.error(e);
+        alert('Upload failed. Check Firestore rules!');
+    } finally {
+        btn.disabled = false; bar.style.display = 'none';
+    }
+}
+
+// ── RENDER ─────────────────────────────────────────────────
+function renderCard(wall, id, data) {
+    const card = document.createElement('div');
+    card.className = 'mem-card';
+    const ol = data.lang || 'en';
+    card.innerHTML = `
+        <button class="del-btn" onclick="delMem('${id}')">×</button>
+        ${data.image ? `<img class="mem-img" src="${data.image}" loading="lazy">` : ''}
+        <div class="mem-body">
+            ${data.mood ? `<div class="mem-mood">${data.mood}</div>` : ''}
+            <div class="mem-text">${escH(data.text)}</div>
+            <div class="mem-translation" data-orig="${escA(data.text)}" data-orig-lang="${ol}"></div>
+            <div class="mem-footer">
+                <span>${data.displayTime || ''}</span>
+                ${data.location ? `<span class="mem-loc">📍 ${escH(data.location)}</span>` : ''}
+            </div>
+        </div>
+    `;
+    wall.appendChild(card);
+
+    const tEl = card.querySelector('.mem-translation');
+    if (data.text && ol !== lang) {
+        translate(data.text, ol, lang).then(tx => {
+            if (tx) tEl.textContent = I18N[lang].transTag + tx;
+        });
+    }
+}
+
+async function delMem(id) {
+    if (confirm(I18N[lang].confirmDel))
+        await window.fb.deleteDoc(window.fb.doc(window.fb.db, "memories", id));
+}
+
+// ── SYNC ───────────────────────────────────────────────────
+function startSync() {
+    const check = setInterval(() => {
+        if (!window.fb) return;
+        clearInterval(check);
+        const q = window.fb.query(
+            window.fb.collection(window.fb.db, "memories"),
+            window.fb.orderBy("timestamp", "desc")
+        );
+        window.fb.onSnapshot(q, snap => {
+            const wall = document.getElementById('photoWall');
+            wall.innerHTML = '';
+            snap.forEach(d => renderCard(wall, d.id, d.data()));
+        });
+    }, 400);
+}
+
+function escH(s) {
+    if (!s) return '';
+    const p = document.createElement('p');
+    p.textContent = s; return p.innerHTML;
+}
+function escA(s) {
+    if (!s) return '';
+    return s.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+// ── BOOT ───────────────────────────────────────────────────
+setLang(lang);
+getLocation();
+startSync();
+</script>
+</body>
+</html>
