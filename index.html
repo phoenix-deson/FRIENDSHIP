@@ -596,7 +596,7 @@ async function getLocation() {
 }
 
 // ── IMAGE COMPRESS ─────────────────────────────────────────
-async function compress(file, maxKB = 700) {
+async function compress(file, maxKB = 600) {
     return new Promise(resolve => {
         const reader = new FileReader();
         reader.onload = e => {
@@ -633,7 +633,7 @@ async function onFile() {
     if (!file) { meta.textContent = ''; note.textContent = ''; pendingImg = null; return; }
     const origKB = Math.round(file.size / 1024);
     meta.textContent = `📎 ${file.name} · ${origKB} KB`;
-    if (file.size > 700 * 1024) {
+    if (file.size > 600 * 1024) {
         note.textContent = I18N[lang].compressing;
         pendingImg = await compress(file, 900);
         const newKB = Math.round(pendingImg.length * 3 / 4 / 1024);
